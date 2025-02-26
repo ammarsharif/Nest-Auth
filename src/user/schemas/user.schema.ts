@@ -3,6 +3,10 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
+export interface RequestWithUser extends Request {
+  user: UserDocument;
+}
+
 @Schema()
 export class User {
   @Prop({ required: true })
