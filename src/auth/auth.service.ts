@@ -1,34 +1,42 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserService } from '../user/user.service';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { UserDocument } from './schemas/user.schema';
+import { FirebaseService } from '../firebase/firebase.service';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase_config';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private firebaseService: FirebaseService) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.userService.findByEmail(email);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      return user;
+  async verifyToken(idToken: string) {
+    try {
+      const decodedToken = await this.firebaseService
+        .getAuth()
+        .verifyIdToken(idToken);
+      return decodedToken;
+    } catch (error: any) {
+      throw new UnauthorizedException('Invalid or expired Firebase token');
     }
-    throw new UnauthorizedException('Invalid credentials');
   }
 
-  login(user: UserDocument) {
-    const payload = { email: user.email, sub: user._id };
-    console.log('req.user', payload);
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  async register(email: string, password: string, displayName: string) {
+    try {
+      const userRecord = await this.firebaseService.getAuth().createUser({
+        email,
+        password,
+        displayName,
+      });
+      return {
+        uid: userRecord.uid,
+        email: userRecord.email,
+        displayName: userRecord.displayName,
+      };
+    } catch (error: any) {
+      throw new UnauthorizedException(error.message);
+    }
   }
 
-  async register(name: string, email: string, password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return this.userService.create({ name, email, password: hashedPassword });
+  async login(email: string, password: string) {
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    return response;
   }
 }

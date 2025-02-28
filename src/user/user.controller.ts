@@ -1,15 +1,12 @@
 import { Controller, Get, Request, UseGuards } from '@nestjs/common';
-import { UserService } from './user.service';
-import { AuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RequestWithUser, UserDocument } from './schemas/user.schema';
+import { FirebaseAuthGuard } from '../auth/guards/firebase-auth.guard';
+import { RequestWithUser } from './schemas/user.schema';
 
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService) {}
-
-  @UseGuards(AuthGuard)
+  @UseGuards(FirebaseAuthGuard)
   @Get('profile')
-  getProfile(@Request() req: RequestWithUser): UserDocument {
+  getProfile(@Request() req: RequestWithUser) {
     return req.user;
   }
 }
