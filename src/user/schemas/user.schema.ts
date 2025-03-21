@@ -1,22 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type UserDocument = User & Document;
-
-export interface RequestWithUser extends Request {
-  user: UserDocument;
-}
-
-@Schema()
-export class User {
+@Schema({ _id: false, timestamps: true })
+export class User extends Document {
   @Prop({ required: true })
-  name: string;
+  _id: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
+  @Prop()
+  displayName: string;
+
+  @Prop()
+  photoURL: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
